@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# loops from 1 to 20 and:
+# displays 4 and then bad luck from China for the 4th element
+# displays 9 and then bad luck from Japan for the 8th element
+# displays 17 and then bad luck from Italy for the 17th element
+element=1
+while [ $element -le 20 ]
+do
+	case $element in
+		4)
+			echo "$element"
+			echo "bad luck from China"
+			;;
+		9)
+			echo "$element"
+			echo "bad luck from Japan"
+			;;
+		17)
+			echo "$element"
+			echo "bad luck from Italy"
+			;;
+		*)
+			echo "$element"
+			;;
+	esac
+	element=$(( element + 1 ))
+done
