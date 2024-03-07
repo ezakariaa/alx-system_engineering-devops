@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 # Bash script displays Best School 10 times.
 # but for the 9th, displays Best School and the Hi.
-
-t=0
-while [ $t -lt 11 ]
+t=1
+while [ $t -le 10 ]
 do
-    if [ $t = 9 ]
+    if [ $t = 10 ]
     then
         echo "Hi"
-    else
-        echo "Best School"
     fi
-    let t+=1
+    echo "Best School"
+    t=$(( t+=1 ))
 done
