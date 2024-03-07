@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bash script displays Best School 10 times.
-#  but for the 9th iteration, displays Best School and the Hi on a new line.
+# but for the 9th, displays Best School and the Hi.
 
 t=0
 while [ $t -lt 11 ]
