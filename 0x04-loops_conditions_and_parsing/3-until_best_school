@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Bash displays Best School 10 times
+
+t=0
+until [ $t -ge 10 ]
+do
+	echo "Best School"
+	t=$((t + 1))
+done
