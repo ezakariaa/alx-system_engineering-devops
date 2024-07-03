@@ -1,27 +1,42 @@
 #!/usr/bin/env bash
-# Install nginx web server
-sudo apt-get update && sudo apt-get install nginx
+# Installs Nginx with the following configurations:
+#+    Listens on port 80.
+#+    Returns a page containing "Hello world!" when queried
+#+     at the root with a curl GET request.
+# Configures /redirect_me as a "301 Moved Permanently".
+# Includes a custom 404 page containing "Ceci n'est pas une page".
 
-# Start nginx service
-sudo service nginx start
+sudo apt-get update
+sudo apt-get -y install nginx
+ufw allow 'Nginx HTTP'
+chmod -R 755 /var/www
+echo 'Hello World' > /var/www/html/index.html
 
-# Create index.html with "Hello World!"
-sudo touch /var/www/html/index.html
-sudo chmod 666 /var/www/html/index.html
-echo "Hello World!" > /var/www/html/index.html
+NEW_SERVER_CONFIG=\
+"server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+        server_name _;
+        location / {
+                try_files \$uri \$uri/ =404;
+        }
+        error_page 404 /404.html;
+        location  /404.html {
+            internal;
+        }
+        if (\$request_filename ~ redirect_me){
+            rewrite ^ https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;
+        }
+}
+"
+echo "Ceci n'est pas une page" > /var/www/html/404.html
+echo "$NEW_SERVER_CONFIG" > /etc/nginx/sites-available/default
 
-# Update Nginx configuration to add redirection
-sudo sed -i '/^}$/i \ \n\trewrite ^/redirect_me https:\/\/www.youtube.com\/watch?v=QH2-TGUlwu4 permanent;' /etc/nginx/sites-available/default
-
-# Create custom 404 error page
-sudo touch /var/www/html/404.html
-echo "Ceci n'est pas une page" | sudo tee /var/www/html/404.html
-
-# Update Nginx configuration to use custom 404 error page
-sudo sed -i '/^}$/i \ \n\terror_page 404 /404.html;\n\n\tlocation /404.html {\n\t\tinternal;\n\t}' /etc/nginx/sites--available/default
-
-# Test Nginx configuration for syntax errors
-sudo nginx -t
-
-# Restart Nginx to apply changes
-service nginx restart
+if [ "$(pgrep nginx)" -le 0 ];
+then
+    service nginx start
+else
+    service nginx restart
+fi;
