@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Install nginx web server
+sudo apt-get update && sudo apt-get install nginx
+
+# Start nginx service
+sudo service nginx start
+
+# Create index.html with "Hello World!"
+sudo touch /var/www/html/index.html
+sudo chmod 666 /var/www/html/index.html
+echo "Hello World!" > /var/www/html/index.html
+
+# Update Nginx configuration to add redirection
+sudo sed -i '/^}$/i \ \n\trewrite ^/redirect_me https:\/\/www.youtube.com\/watch?v=QH2-TGUlwu4 permanent;' /etc/nginx/sites-available/default
+
+# Create custom 404 error page
+sudo touch /var/www/html/404.html
+echo "Ceci n'est pas une page" | sudo tee /var/www/html/404.html
+
+# Update Nginx configuration to use custom 404 error page
+sudo sed -i '/^}$/i \ \n\terror_page 404 /404.html;\n\n\tlocation /404.html {\n\t\tinternal;\n\t}' /etc/nginx/sites--available/default
+
+# Test Nginx configuration for syntax errors
+sudo nginx -t
+
+# Restart Nginx to apply changes
+service nginx restart
