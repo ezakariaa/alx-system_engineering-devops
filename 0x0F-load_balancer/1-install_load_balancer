@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Installing HAProxy
+
+
+echo -e "\t>>> Updating sys, installing HAProxy and starting it...\n"
+sudo apt -y  update
+sudo apt -y install haproxy
+sudo service haproxy start
+
+echo -e "\n\t>>> Adding the configurations to /etc/haproxy/haproxy.cfg...\n"
+sudo tee /etc/haproxy/haproxy.cfg >> /dev/null << 'EOF'
+frontend mabende-frontend
+    bind *:80
+    default_backend mabende-isad-backend
+backend mabende-isad-backend
+    balance roundrobin
+    server web-01 100.25.152.65:80 check
+    server web-02 52.3.242.252:80 check
+EOF
+
+echo -e "\n\t>>> Adding the configurations to /etc/default/haproxy...\n"
+echo "ENABLED=1" | sudo tee /etc/default/haproxy
+
+sudo service haproxy restart
+
+echo -e "\n\t>>> Completed.\n"
