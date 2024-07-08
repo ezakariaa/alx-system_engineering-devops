@@ -14,8 +14,8 @@ frontend mabende-frontend
     default_backend mabende-isad-backend
 backend mabende-isad-backend
     balance roundrobin
-    server web-01 100.25.152.65:80 check
-    server web-02 52.3.242.252:80 check
+    server web-01 100.27.4.173:80 check
+    server web-02 34.201.161.76:80 check
 EOF
 
 echo -e "\n\t>>> Adding the configurations to /etc/default/haproxy...\n"
