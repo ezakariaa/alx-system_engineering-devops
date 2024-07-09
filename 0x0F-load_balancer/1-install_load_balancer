@@ -1,26 +1,58 @@
 #!/usr/bin/env bash
-# Installing HAProxy
+# Install and configure HAproxy on your lb-01 server.
 
+sudo apt-get -y update
+sudo apt-get -y upgrade
+sudo apt-get -y install haproxy
 
-echo -e "\t>>> Updating sys, installing HAProxy and starting it...\n"
-sudo apt -y  update
-sudo apt -y install haproxy
-sudo service haproxy start
+sudo mv /etc/haproxy/haproxy.cfg.bak
+sudo touch /etc/haproxy/haproxy.cfg
 
-echo -e "\n\t>>> Adding the configurations to /etc/haproxy/haproxy.cfg...\n"
-sudo tee /etc/haproxy/haproxy.cfg >> /dev/null << 'EOF'
-frontend mabende-frontend
-    bind *:80
-    default_backend mabende-isad-backend
-backend mabende-isad-backend
-    balance roundrobin
-    server web-01 100.27.4.173:80 check
-    server web-02 34.201.161.76:80 check
-EOF
+server_config=\
+"
+global
+    log /dev/log    local0
+    log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+    ca-base /etc/ssl/certs
+    crt-base /etc/ssl/private
+    ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:RSA+AESGCM:RSA+AES:!aNULL:!MD5:!DSS
+    ssl-default-bind-options no-sslv3
 
-echo -e "\n\t>>> Adding the configurations to /etc/default/haproxy...\n"
-echo "ENABLED=1" | sudo tee /etc/default/haproxy
+defaults
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    timeout connect 5000
+    timeout client  50000
+    timeout server  50000
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
 
+frontend load_balancer
+        bind *:80
+        mode http
+        default_backend webservers
+
+backend webservers
+        balance roundrobin
+        server 486411-web-01 54.90.1.233:80 check
+        server 486411-web-02 54.236.52.90:80 check
+"
+echo "$server_config" | sudo tee -a /etc/haproxy/haproxy.cfg
+
+echo "ENABLED=1" | sudo tee -a /etc/default/haproxy
+
+sudo systemctl enable haproxy
 sudo service haproxy restart
-
-echo -e "\n\t>>> Completed.\n"
