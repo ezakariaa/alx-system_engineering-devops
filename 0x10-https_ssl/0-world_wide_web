@@ -1,18 +1,43 @@
 #!/usr/bin/env bash
-# Bash script that will display information about subdomains.
+# This script provides information about subdomains
 
-domain_information () {
-    line=$(dig "$2"."$1" | grep -A1 'ANSWER SECTION:' | tr '\t' '\n' | tail -2 | tr '\n' ' ')
-    echo "$2 $line" | awk '{print "The subdomain " $1 " is a " $2 " record and points to " $3}'
+# Function to retrieve and display DNS information for a subdomain
+get_dns_info() {
+    if [ $# -ne 2 ]; then
+        echo "Error: Invalid number of arguments in get_dns_info function"
+        exit 1
+    fi
+
+    local domain="$1"
+    local subdomain="$2"
+
+    if [ -z "$domain" ] || [ -z "$subdomain" ]; then
+        echo "Error: Domain and subdomain cannot be empty"
+        exit 1
+    fi
+
+    dig_output=$(dig "$subdomain.$domain" | awk '/ANSWER SECTION/ {getline; print}')
+    record_type=$(echo "$dig_output" | awk '{print $4}')
+    destination=$(echo "$dig_output" | awk '{print $5}')
+    echo "The subdomain $subdomain is a $record_type record and points to $destination"
 }
 
-if [ "$#" == 1 ]
-then
-  domain_information "$1" "www"
-  domain_information "$1" "lb-01"
-  domain_information "$1" "web-01"
-  domain_information "$1" "web-02"
-elif [ "$#" == 2 ]
-then
-  domain_information "$1" "$2"
+# Main script starts here
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    echo "Usage: $0 domain [subdomain]"
+    exit 1
+fi
+
+domain="$1"
+
+# If only a domain is provided
+if [ $# -eq 1 ]; then
+    get_dns_info "$domain" "www"
+    get_dns_info "$domain" "lb-01"
+    get_dns_info "$domain" "web-01"
+    get_dns_info "$domain" "web-02"
+# If both a domain and a subdomain are provided
+elif [ $# -eq 2 ]; then
+    subdomain="$2"
+    get_dns_info "$domain" "$subdomain"
 fi
